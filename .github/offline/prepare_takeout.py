@@ -13,7 +13,7 @@ EXPECTED = {
     "dies-iovis": 25, "dies-solis": 24, "dies-martis": 20,
     "dies-albini": 24, "dies-tigris": 24, "dies-delfini": 24,
     "dies-canis": 24, "dies-felis": 24, "dies-tauri": 8,
-    "dies-ursi": 24, "dies-apri": 8, "dies-akita": 9,
+    "dies-ursi": 24, "dies-apri": 24, "dies-akita": 9,
 }
 
 root_html = ROOT / "index.html"
