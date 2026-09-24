@@ -1,0 +1,49 @@
+name: Update Windows Dies Apri album
+
+on:
+  push:
+    branches:
+      - 12DD-WIN-OFFLINE
+    paths:
+      - .github/workflows/update-windows-dies-apri.yml
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update album code and artwork
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git clone "https://x-access-token:$GITHUB_TOKEN@github.com/bryanzzai/12DD-DESKTOP-OFFLINE.git" target
+          git -C target checkout 12DD-WIN-OFFLINE
+          git clone --depth 1 https://github.com/bryanzzai/bryanmackayne.git source
+          cp source/dies-apri/index.html target/dies-apri/index.html
+          rm -rf target/dies-apri/art
+          mkdir -p target/dies-apri/art
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, shutil
+          source = Path("source/dies-apri")
+          target = Path("target/dies-apri/art")
+          html = (source / "index.html").read_text(encoding="utf-8")
+          artwork = re.findall(r'\["[^"]+",\s*"[^"]+",\s*"([^"]+)"\]', html)
+          if len(artwork) != 24 or len(set(artwork)) != 24:
+              raise SystemExit(f"Expected 24 unique artwork names, got {len(artwork)}")
+          for name in artwork:
+              src = source / "art" / name
+              if not src.is_file():
+                  raise SystemExit(f"Missing artwork: {name}")
+              shutil.copy2(src, target / name)
+          (target / ".gitkeep").touch()
+          PY
+          sed -i 's/"dies-apri": 8/"dies-apri": 24/' target/.github/offline/prepare_takeout.py
+          git -C target config user.name "github-actions[bot]"
+          git -C target config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C target add dies-apri .github/offline/prepare_takeout.py
+          git -C target commit -m "Replace Dies Apri with 24-track album"
+          git -C target push origin HEAD:12DD-WIN-OFFLINE
